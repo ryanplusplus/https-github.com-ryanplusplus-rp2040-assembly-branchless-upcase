@@ -12,6 +12,8 @@
  * - r7 => Mask register set by comparison with 'a'
  */
 
+.syntax unified
+
 .thumb_func
 .global main
 
@@ -21,37 +23,37 @@ main:
   ldr r3, =outstr
 loop:
   ldrb r5, [r4]           // c <- *in
-  add r4, #1              // in++
+  adds r4, #1             // in++
 
-  mov r6, #0              // initialize r6 and r7 masks
-  mov r7, #0
+  movs r6, #0             // initialize r6 and r7 masks
+  movs r7, #0
 
-  neg r5, r5              // negate c and compare with 'z' so that carry is set if c < 'z'
+  negs r5, r5             // negate c and compare with 'z' so that carry is set if c < 'z'
   cmp r5, #'z'
 
-  adc r6, r6              // create a 32-bit mask containing copies of the carry bit
-  lsl r6, #31
-  asr r6, #31
+  adcs r6, r6             // create a 32-bit mask containing copies of the carry bit
+  lsls r6, #31
+  asrs r6, #31
 
-  neg r5, r5              // restore value of c
+  negs r5, r5             // restore value of c
 
   cmp r5, #'a'            // set carry if c > 'a'
 
-  adc r7, r7              // create a 32-bit mask containing copies of the carry bit
-  lsl r7, #31
-  asr r7, #31
+  adcs r7, r7             // create a 32-bit mask containing copies of the carry bit
+  lsls r7, #31
+  asrs r7, #31
 
 upcase:
-  mov r1, #('a' - 'A')    // start with an offset of 32...
-  and r1, r6              // ...then use r6 and r7 masks to clear to zero if c < 'a' or c > 'z'
-  and r1, r7
+  movs r1, #('a' - 'A')   // start with an offset of 32...
+  ands r1, r6             // ...then use r6 and r7 masks to clear to zero if c < 'a' or c > 'z'
+  ands r1, r7
 
-  sub r5, r5, r1          // offset c if lowercae
+  subs r5, r1             // offset c if lowercae
 
   strb r5, [r3]           // *out = c
-  add r3, #1              // out++
+  adds r3, #1             // out++
 
-  cmp r5, #0              // if c != \0 keep going
+  cmp r5, #0              // if c != \0, keep going
   bne loop
 
 loop2:
