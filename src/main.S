@@ -2,9 +2,14 @@
  * Prints "Hello, World! <count value>" in a tight loop
  *
  * Registers used:
- * - r0 => First parameter to printf
- * - r1 => Second parameter to printf
- * - r7 => Counter
+ * - r0 => Argument to printf
+ * - r1 => Offset for upcase operation (0 or 32)
+ * - r2 => Unused
+ * - r3 => Pointer into input
+ * - r4 => Pointer into output
+ * - r5 => Current character
+ * - r6 => Mask register set by comparison with 'z'
+ * - r7 => Mask register set by comparison with 'a'
  */
 
 .thumb_func
@@ -15,18 +20,38 @@ main:
   ldr r4, =instr
   ldr r3, =outstr
 loop:
-  ldrb r5, [r4]
-  add r4, #1
+  ldrb r5, [r4]           // c <- *in
+  add r4, #1              // in++
+
+  mov r6, #0              // initialize r6 and r7 masks
+  mov r7, #0
+
+  neg r5, r5              // negate c and compare with 'z' so that carry is set if c < 'z'
   cmp r5, #'z'
-  bgt cont
-  cmp r5, #'a'
-  blt cont
+
+  adc r6, r6              // create a 32-bit mask containing copies of the carry bit
+  lsl r6, #31
+  asr r6, #31
+
+  neg r5, r5              // restore value of c
+
+  cmp r5, #'a'            // set carry if c > 'a'
+
+  adc r7, r7              // create a 32-bit mask containing copies of the carry bit
+  lsl r7, #31
+  asr r7, #31
+
 upcase:
-  sub r5, #('a' - 'A')
-cont:
-  strb r5, [r3]
-  add r3, #1
-  cmp r5, #0
+  mov r1, #('a' - 'A')    // start with an offset of 32...
+  and r1, r6              // ...then use r6 and r7 masks to clear to zero if c < 'a' or c > 'z'
+  and r1, r7
+
+  sub r5, r5, r1          // offset c if lowercae
+
+  strb r5, [r3]           // *out = c
+  add r3, #1              // out++
+
+  cmp r5, #0              // if c != \0 keep going
   bne loop
 
 loop2:
