@@ -3,6 +3,13 @@
 
 .global upcase
 
+// Creates a 32-bit mask containing copies of the carry bit
+.macro build_carry_mask destination
+  adcs \destination, \destination
+  lsls \destination, #31
+  asrs \destination, #31
+.endm
+
 /*
  * Arguments:
  * - r0 => Pointer to input string
@@ -30,9 +37,7 @@ check_end:
   negs r2, r2             // negate c and compare with 'z' so that carry is set if c < 'z'
   cmp r2, #'z'
 
-  adcs r4, r4             // create a 32-bit mask containing copies of the carry bit
-  lsls r4, #31
-  asrs r4, #31
+  build_carry_mask r4
 
   ands r3, r4             // use the mask to clear (if > 'z') or retain offset
 
@@ -43,9 +48,7 @@ check_start:
 
   cmp r2, #'a'            // set carry if c > 'a'
 
-  adcs r4, r4             // create a 32-bit mask containing copies of the carry bit
-  lsls r4, #31
-  asrs r4, #31
+  build_carry_mask r4
 
   ands r3, r4             // use the mask to clear (if < 'a') or retain offset
 
