@@ -15,6 +15,7 @@ include_directories(
 
 set(target_SRC
   src/main.S
+  src/upcase.S
 )
 
 add_executable(target ${target_SRC})
